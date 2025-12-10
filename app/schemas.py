@@ -57,15 +57,6 @@ class CreateAPIKeyRequest(BaseModel):
             }
         }
     }
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "wallet-service",
-                "permissions": ["deposit", "transfer", "read"],
-                "expiry": "1D"
-            }
-        }
 
 
 class CreateAPIKeyResponse(BaseModel):
