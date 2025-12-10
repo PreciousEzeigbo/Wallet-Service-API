@@ -86,6 +86,7 @@ class DepositStatusResponse(BaseModel):
 
 class BalanceResponse(BaseModel):
     balance: float
+    wallet_number: str
 
 
 class TransferRequest(BaseModel):

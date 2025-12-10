@@ -210,7 +210,10 @@ async def get_balance(
             detail="Wallet not found"
         )
     
-    return BalanceResponse(balance=wallet.balance)
+    return BalanceResponse(
+        balance=wallet.balance,
+        wallet_number=wallet.wallet_number
+    )
 
 
 @router.post("/transfer", response_model=TransferResponse)
