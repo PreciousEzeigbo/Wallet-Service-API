@@ -32,35 +32,50 @@ async def create_api_key(
     """
     Create a new API key with specific permissions for wallet operations.
     
-    Args:
-        request: API key creation parameters (name, permissions, expiry)
-        user: Authenticated user from JWT token
-        db: Database session
+    Request Body Example:
+        {
+            "name": "wallet-service",
+            "permissions": ["deposit", "transfer", "read"],
+            "expiry": "1D"
+        }
     
-    Returns:
-        CreateAPIKeyResponse: Plain text API key and expiration date
-    
-    Raises:
-        HTTPException 400: Maximum of 5 active keys reached
-        HTTPException 401: Invalid or missing JWT token
+    - Only 5 active (not expired, not revoked) API keys allowed per user.
+    - Permissions must be a subset of ["deposit", "transfer", "read"].
+    - Expiry must be a valid option (1H, 1D, 1M, 1Y).
+    - API key is returned only once in the response.
     """
+
     active_keys_count = db.query(APIKey).filter(
         APIKey.user_id == user.id,
         APIKey.is_active == True,
         APIKey.expires_at > datetime.now(timezone.utc)
     ).count()
-    
     if active_keys_count >= 5:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum of 5 active API keys allowed per user"
+            detail="Maximum of 5 active API keys allowed per user. Revoke or let one expire before creating a new key."
         )
-    
-    expires_at = parse_expiry(request.expiry.value)
+
+    valid_permissions = ["deposit", "transfer", "read"]
+    for perm in request.permissions:
+        if perm not in valid_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid permission: {perm}. Valid permissions are: {valid_permissions}"
+            )
+
+    try:
+        expires_at = parse_expiry(request.expiry.value)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid expiry value: {request.expiry}. Must be one of: 1H, 1D, 1M, 1Y."
+        )
+
     api_key_value = APIKey.generate_key()
     key_hash = hash_api_key(api_key_value)
     key_prefix = APIKey.get_key_prefix(api_key_value)
-    
+
     api_key = APIKey(
         user_id=user.id,
         name=request.name,
@@ -69,11 +84,11 @@ async def create_api_key(
         permissions=request.permissions,
         expires_at=expires_at
     )
-    
+
     db.add(api_key)
     db.commit()
     db.refresh(api_key)
-    
+
     return CreateAPIKeyResponse(
         api_key=api_key_value,
         expires_at=api_key.expires_at.replace(tzinfo=timezone.utc)

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+ nfrom pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -22,19 +22,17 @@ class ExpiryOption(str, Enum):
     ONE_YEAR = "1Y"
 
 
-# Auth Schemas
 class GoogleAuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: dict
 
 
-# API Key Schemas
 class CreateAPIKeyRequest(BaseModel):
-    name: str
-    permissions: List[str]
-    expiry: ExpiryOption
-    
+    name: str = Field(..., description="A name for the API key (e.g., 'wallet-service')")
+    permissions: List[str] = Field(..., description="List of permissions: any of ['deposit', 'transfer', 'read']")
+    expiry: ExpiryOption = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
+
     @validator('permissions')
     def validate_permissions(cls, v):
         valid_permissions = ["deposit", "transfer", "read"]
@@ -68,7 +66,6 @@ class APIKeyResponse(BaseModel):
         from_attributes = True
 
 
-# Wallet Schemas
 class DepositRequest(BaseModel):
     amount: int = Field(..., gt=0, description="Amount in kobo (100 kobo = ₦1). Must be greater than 0.")
 
