@@ -65,7 +65,7 @@ async def create_api_key(
             )
 
     try:
-        expires_at = parse_expiry(request.expiry.value)
+        expires_at = parse_expiry(request.expiry)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -140,7 +140,7 @@ async def rollover_api_key(
             detail="API key not found"
         )
     
-    if expired_key.expires_at < datetime.now(timezone.utc):
+    if expired_key.expires_at > datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="API key is not expired yet"
@@ -158,7 +158,7 @@ async def rollover_api_key(
             detail="Maximum of 5 active API keys allowed per user"
         )
     
-    new_expires_at = parse_expiry(request.expiry.value)
+    new_expires_at = parse_expiry(request.expiry)
     new_api_key_value = APIKey.generate_key()
     new_key_hash = hash_api_key(new_api_key_value)
     new_key_prefix = APIKey.get_key_prefix(new_api_key_value)

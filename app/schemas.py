@@ -31,7 +31,7 @@ class GoogleAuthResponse(BaseModel):
 class CreateAPIKeyRequest(BaseModel):
     name: str = Field(..., description="A name for the API key (e.g., 'wallet-service')")
     permissions: List[str] = Field(..., description="List of permissions: any of ['deposit', 'transfer', 'read']")
-    expiry: ExpiryOption = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
+    expiry: str = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
 
     @validator('permissions')
     def validate_permissions(cls, v: List[str]) -> List[str]:
@@ -39,6 +39,13 @@ class CreateAPIKeyRequest(BaseModel):
         for perm in v:
             if perm not in valid_permissions:
                 raise ValueError(f"Invalid permission: {perm}. Valid permissions are: {valid_permissions}")
+        return v
+    
+    @validator('expiry')
+    def validate_expiry(cls, v: str) -> str:
+        valid_expiry = ["1H", "1D", "1M", "1Y"]
+        if v not in valid_expiry:
+            raise ValueError(f"Invalid expiry: {v}. Valid options are: {valid_expiry}")
         return v
 
 
@@ -49,7 +56,14 @@ class CreateAPIKeyResponse(BaseModel):
 
 class RolloverAPIKeyRequest(BaseModel):
     expired_key_id: str
-    expiry: ExpiryOption
+    expiry: str = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
+    
+    @validator('expiry')
+    def validate_expiry(cls, v: str) -> str:
+        valid_expiry = ["1H", "1D", "1M", "1Y"]
+        if v not in valid_expiry:
+            raise ValueError(f"Invalid expiry: {v}. Valid options are: {valid_expiry}")
+        return v
 
 
 class APIKeyResponse(BaseModel):
