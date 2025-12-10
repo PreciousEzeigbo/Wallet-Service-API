@@ -44,8 +44,6 @@ async def create_api_key(
         HTTPException 400: Maximum of 5 active keys reached
         HTTPException 401: Invalid or missing JWT token
     """
-    user
-    
     active_keys_count = db.query(APIKey).filter(
         APIKey.user_id == user.id,
         APIKey.is_active == True,
@@ -116,8 +114,6 @@ async def rollover_api_key(
         HTTPException 401: Invalid or missing JWT token
         HTTPException 404: Key not found or doesn't belong to user
     """
-    user
-    
     expired_key = db.query(APIKey).filter(
         APIKey.id == request.expired_key_id,
         APIKey.user_id == user.id
@@ -202,8 +198,6 @@ async def revoke_api_key(
         HTTPException 401: Invalid or missing JWT token
         HTTPException 404: Key not found or doesn't belong to user
     """
-    user
-    
     api_key = db.query(APIKey).filter(
         APIKey.id == key_id,
         APIKey.user_id == user.id
@@ -253,8 +247,6 @@ async def list_api_keys(
     Raises:
         HTTPException 401: Invalid or missing JWT token
     """
-    user
-    
     keys = db.query(APIKey).filter(
         APIKey.user_id == user.id
     ).order_by(APIKey.created_at.desc()).all()

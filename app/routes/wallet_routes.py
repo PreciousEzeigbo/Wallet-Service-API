@@ -22,7 +22,7 @@ paystack = PaystackClient()
     "/deposit",
     response_model=DepositResponse,
     summary="Initialize Paystack deposit",
-    description="""Initialize a deposit transaction via Paystack payment gateway. Returns a payment URL where the user completes the payment. Amount is specified in Naira (₦), automatically converted to kobo for Paystack. Webhook automatically credits wallet upon successful payment.""",
+    description="""Initialize a deposit transaction via Paystack payment gateway. Amount must be in kobo (100 kobo = ₦1). Returns a payment URL where the user completes the payment. Webhook automatically credits wallet upon successful payment.""",
     responses={
         200: {"description": "Payment URL generated successfully"},
         400: {"description": "Invalid request or payment initialization failed"},
@@ -40,7 +40,7 @@ async def deposit(
     Initialize a Paystack deposit transaction for the authenticated user's wallet.
     
     Args:
-        request: Deposit parameters (amount in Naira)
+        request: Deposit parameters (amount in kobo)
         user: Authenticated user (requires 'deposit' permission for API keys)
         db: Database session
     
@@ -90,7 +90,7 @@ async def deposit(
     try:
         paystack_response = await paystack.initialize_transaction(
             email=user.email,
-            amount=int(request.amount * 100),
+            amount=request.amount,
             reference=reference
         )
         
@@ -164,7 +164,7 @@ async def paystack_webhook(
     if event == "charge.success":
         event_data = data.get("data", {})
         reference = event_data.get("reference")
-        amount = event_data.get("amount", 0) / 100
+        amount = event_data.get("amount", 0)
         paystack_status = event_data.get("status")
         
         if not reference:
@@ -268,7 +268,7 @@ async def get_deposit_status(
     "/balance",
     response_model=BalanceResponse,
     summary="Get wallet balance",
-    description="""Retrieve current wallet balance and wallet number. Balance is in Naira (₦). Wallet number is the unique 10-digit identifier for receiving transfers.""",
+    description="""Retrieve current wallet balance (in kobo) and wallet number. Balance is in kobo (100 kobo = ₦1). Wallet number is the unique 10-digit identifier for receiving transfers.""",
     responses={
         200: {"description": "Balance and wallet number retrieved"},
         401: {"description": "Invalid or missing authentication"},
@@ -288,7 +288,7 @@ async def get_balance(
         db: Database session
     
     Returns:
-        BalanceResponse: Current balance (Naira) and 10-digit wallet number
+        BalanceResponse: Current balance (kobo) and 10-digit wallet number
     
     Raises:
         HTTPException 401: Invalid authentication
@@ -329,10 +329,10 @@ async def transfer(
     db: Session = Depends(get_db)
 ):
     """
-    Transfer funds atomically from authenticated user's wallet to recipient wallet.
+    Transfer funds from authenticated user's wallet to recipient's wallet.
     
     Args:
-        request: Transfer parameters (recipient wallet number, amount in Naira)
+        request: Transfer parameters (recipient wallet number, amount in kobo)
         user: Authenticated user (requires 'transfer' permission for API keys)
         db: Database session
     

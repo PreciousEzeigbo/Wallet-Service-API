@@ -70,7 +70,7 @@ class APIKeyResponse(BaseModel):
 
 # Wallet Schemas
 class DepositRequest(BaseModel):
-    amount: float = Field(..., gt=0, description="Amount must be greater than 0")
+    amount: int = Field(..., gt=0, description="Amount in kobo (100 kobo = ₦1). Must be greater than 0.")
 
 
 class DepositResponse(BaseModel):
@@ -81,17 +81,17 @@ class DepositResponse(BaseModel):
 class DepositStatusResponse(BaseModel):
     reference: str
     status: TransactionStatus
-    amount: float
+    amount: int
 
 
 class BalanceResponse(BaseModel):
-    balance: float
+    balance: int
     wallet_number: str
 
 
 class TransferRequest(BaseModel):
     wallet_number: str
-    amount: float = Field(..., gt=0, description="Amount must be greater than 0")
+    amount: int = Field(..., gt=0, description="Amount in kobo (100 kobo = ₦1). Must be greater than 0.")
 
 
 class TransferResponse(BaseModel):
@@ -102,7 +102,7 @@ class TransferResponse(BaseModel):
 class TransactionResponse(BaseModel):
     id: str
     type: TransactionType
-    amount: float
+    amount: int
     status: TransactionStatus
     reference: str
     created_at: datetime

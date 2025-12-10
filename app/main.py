@@ -50,7 +50,12 @@ A production-ready wallet service with Paystack payment integration, OAuth authe
 
 ## Amounts
 
-All amounts in requests/responses are in **Naira (₦)**. System automatically converts to kobo for Paystack.
+**All monetary amounts are in kobo (100 kobo = ₦1).**
+
+- Request amounts must be in kobo (e.g., 50000 kobo = ₦500)
+- Response balances and amounts are in kobo  
+- Internally stored and processed in kobo for precision
+- Paystack integration receives amounts in kobo
     """,
     version="1.0.0",
     openapi_tags=[

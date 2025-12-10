@@ -27,7 +27,7 @@ class Wallet(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"), unique=True, nullable=False)
     wallet_number = Column(String, unique=True, index=True, nullable=False)
-    balance = Column(Float, default=0.0)
+    balance = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -54,7 +54,7 @@ class Transaction(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     reference = Column(String, unique=True, index=True, nullable=False)
     type = Column(SQLEnum(TransactionType), nullable=False)
-    amount = Column(Float, nullable=False)
+    amount = Column(Integer, nullable=False)
     status = Column(SQLEnum(TransactionStatus), default=TransactionStatus.PENDING)
     sender_wallet_id = Column(String, ForeignKey("wallets.id"), nullable=True)
     recipient_wallet_id = Column(String, ForeignKey("wallets.id"), nullable=True)

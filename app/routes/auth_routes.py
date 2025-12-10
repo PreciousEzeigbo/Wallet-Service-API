@@ -199,7 +199,7 @@ async def login(email: str, db: Session = Depends(get_db)):
         wallet = Wallet(
             user_id=user.id,
             wallet_number=wallet_number,
-            balance=0.0
+            balance=0
         )
         db.add(wallet)
         db.commit()
