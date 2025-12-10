@@ -92,7 +92,7 @@ async def paystack_webhook(
     This endpoint credits the wallet after successful payment
     """
     
-    # Get raw body
+    # Get raw body for signature verification
     body = await request.body()
     
     # Verify signature
@@ -108,8 +108,9 @@ async def paystack_webhook(
             detail="Invalid signature"
         )
     
-    # Parse webhook data
-    data = await request.json()
+    # Parse webhook data from the raw body (can't call request.json() after body())
+    import json
+    data = json.loads(body.decode('utf-8'))
     event = data.get("event")
     
     if event == "charge.success":

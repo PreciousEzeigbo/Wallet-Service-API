@@ -84,7 +84,7 @@ class PaystackClient:
             bool indicating if signature is valid
         """
         computed_signature = hmac.new(
-            settings.paystack_webhook_secret.encode('utf-8'),
+            settings.paystack_secret_key.encode('utf-8'),
             payload,
             hashlib.sha512
         ).hexdigest()
