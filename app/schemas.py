@@ -29,9 +29,9 @@ class GoogleAuthResponse(BaseModel):
 
 
 class CreateAPIKeyRequest(BaseModel):
-    name: str = Field(..., description="A name for the API key (e.g., 'wallet-service')")
-    permissions: List[str] = Field(..., description="List of permissions: any of ['deposit', 'transfer', 'read']")
-    expiry: str = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
+    name: str = Field(..., example="wallet-service", description="A name for the API key (e.g., 'wallet-service')")
+    permissions: List[str] = Field(..., example=["deposit", "transfer", "read"], description="List of permissions: any of ['deposit', 'transfer', 'read']")
+    expiry: str = Field(..., example="1D", description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
 
     @validator('permissions')
     def validate_permissions(cls, v: List[str]) -> List[str]:
@@ -47,6 +47,15 @@ class CreateAPIKeyRequest(BaseModel):
         if v not in valid_expiry:
             raise ValueError(f"Invalid expiry: {v}. Valid options are: {valid_expiry}")
         return v
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "wallet-service",
+                "permissions": ["deposit", "transfer", "read"],
+                "expiry": "1D"
+            }
+        }
 
 
 class CreateAPIKeyResponse(BaseModel):
