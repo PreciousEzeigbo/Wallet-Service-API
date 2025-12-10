@@ -5,7 +5,7 @@ from typing import Optional, List
 from datetime import datetime
 from app.database import get_db
 from app.models import User, APIKey
-from app.utils import verify_token
+from app.utils import verify_token, verify_api_key
 
 security = HTTPBearer(auto_error=False)
 
@@ -21,10 +21,21 @@ async def get_current_user(
     """
     # Try API Key authentication first
     if x_api_key:
-        api_key = db.query(APIKey).filter(
-            APIKey.key == x_api_key,
+        # Get key prefix to narrow down search
+        key_prefix = APIKey.get_key_prefix(x_api_key)
+        
+        # Find potential matching keys by prefix
+        potential_keys = db.query(APIKey).filter(
+            APIKey.key_prefix == key_prefix,
             APIKey.is_active == True
-        ).first()
+        ).all()
+        
+        # Verify hash for each potential match
+        api_key = None
+        for pk in potential_keys:
+            if verify_api_key(x_api_key, pk.key_hash):
+                api_key = pk
+                break
         
         if not api_key:
             raise HTTPException(

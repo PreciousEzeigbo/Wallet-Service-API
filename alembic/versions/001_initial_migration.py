@@ -54,7 +54,7 @@ def upgrade() -> None:
         sa.Column('status', sa.Enum('PENDING', 'SUCCESS', 'FAILED', name='transactionstatus'), nullable=True),
         sa.Column('sender_wallet_id', sa.String(), nullable=True),
         sa.Column('recipient_wallet_id', sa.String(), nullable=True),
-        sa.Column('metadata', sa.String(), nullable=True),
+        sa.Column('transaction_metadata', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(['recipient_wallet_id'], ['wallets.id'], ),

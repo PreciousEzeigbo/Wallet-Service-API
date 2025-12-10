@@ -58,7 +58,7 @@ class Transaction(Base):
     status = Column(SQLEnum(TransactionStatus), default=TransactionStatus.PENDING)
     sender_wallet_id = Column(String, ForeignKey("wallets.id"), nullable=True)
     recipient_wallet_id = Column(String, ForeignKey("wallets.id"), nullable=True)
-    metadata = Column(String, nullable=True)
+    transaction_metadata = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -73,7 +73,8 @@ class APIKey(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
-    key = Column(String, unique=True, index=True, nullable=False)
+    key_hash = Column(String, nullable=False)  # Store hash, not plain key
+    key_prefix = Column(String, nullable=False)  # Store prefix for identification (e.g., "sk_live_abc")
     permissions = Column(ARRAY(String), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_active = Column(Boolean, default=True)
@@ -85,3 +86,8 @@ class APIKey(Base):
     @staticmethod
     def generate_key():
         return f"sk_live_{secrets.token_urlsafe(32)}"
+    
+    @staticmethod
+    def get_key_prefix(key: str, length: int = 12) -> str:
+        """Extract first N characters as prefix for identification"""
+        return key[:length] if len(key) >= length else key

@@ -54,6 +54,20 @@ class RolloverAPIKeyRequest(BaseModel):
     expiry: ExpiryOption
 
 
+class APIKeyResponse(BaseModel):
+    id: str
+    name: str
+    permissions: List[str]
+    expires_at: datetime
+    is_active: bool
+    is_expired: bool
+    created_at: datetime
+    key_preview: str
+
+    class Config:
+        from_attributes = True
+
+
 # Wallet Schemas
 class DepositRequest(BaseModel):
     amount: float = Field(..., gt=0, description="Amount must be greater than 0")
@@ -91,7 +105,7 @@ class TransactionResponse(BaseModel):
     status: TransactionStatus
     reference: str
     created_at: datetime
-    metadata: Optional[str] = None
+    transaction_metadata: Optional[str] = None
     
     class Config:
         from_attributes = True

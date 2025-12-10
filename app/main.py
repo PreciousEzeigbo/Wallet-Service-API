@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 from app.routes import auth_routes, keys_routes, wallet_routes
 from app.config import get_settings
 
@@ -10,6 +11,15 @@ app = FastAPI(
     title="Wallet Service API",
     description="A comprehensive wallet service with Paystack integration, JWT authentication, and API key management",
     version="1.0.0"
+)
+
+# Session middleware (required for OAuth)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    max_age=3600,  # 1 hour
+    same_site="lax",
+    https_only=False  # Set to True in production
 )
 
 # CORS middleware
