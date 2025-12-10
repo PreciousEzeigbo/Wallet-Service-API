@@ -1,27 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, APIKeyHeader
+from fastapi.openapi.utils import get_openapi
 from starlette.middleware.sessions import SessionMiddleware
 from app.routes import auth_routes, keys_routes, wallet_routes
 from app.config import get_settings
 
 settings = get_settings()
-
-security_schemes = {
-    "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "JWT token obtained from Google OAuth login or test-login endpoint. Use for all operations including API key management."
-    },
-    "apiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-api-key",
-        "description": "API key for wallet operations with granular permissions (deposit, transfer, read). Cannot be used for key management endpoints."
-    }
-}
 
 app = FastAPI(
     title="Wallet Service API",
@@ -73,19 +58,6 @@ All monetary amounts are handled in **Naira** (₦) in API requests/responses. T
     ]
 )
 
-app.openapi_schema = None
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    
-    openapi_schema = app.openapi()
-    openapi_schema["components"]["securitySchemes"] = security_schemes
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
-
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
@@ -114,6 +86,40 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth_routes.router)
 app.include_router(keys_routes.router)
 app.include_router(wallet_routes.router)
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags
+    )
+    
+    openapi_schema["components"]["securitySchemes"] = {
+        "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT token obtained from Google OAuth login. Use for all operations including API key management."
+        },
+        "apiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "x-api-key",
+            "description": "API key for wallet operations with granular permissions (deposit, transfer, read). Cannot be used for key management endpoints."
+        }
+    }
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 
 @app.get("/")
