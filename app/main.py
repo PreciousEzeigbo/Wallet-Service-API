@@ -15,7 +15,6 @@ app = FastAPI(
 
 A production-ready wallet service with Paystack payment integration, OAuth authentication, and granular API key permissions.
 
-## 🔐 Getting Started - Authentication
 
 ### Step 1: Get Your JWT Token (First Time Setup)
 
@@ -38,21 +37,18 @@ A production-ready wallet service with Paystack payment integration, OAuth authe
 
 ### Step 3: Create API Keys (Optional)
 - Now you can use `/keys/create` to generate API keys with specific permissions
-- API keys are for automated systems/services that need limited access
 
-## 🔑 Authentication Methods
-
-### JWT Bearer Token (For You - The Owner)
+### JWT Bearer Token
 - Full access to everything
 - Manage API keys, perform all wallet operations
 - Required for: `/keys/*` endpoints
 
-### API Key (For Your Apps/Services)
+### API Key
 - Limited permissions: `deposit`, `transfer`, `read`
 - Cannot create or manage other keys (security)
 - Optional for: `/wallet/*` endpoints (you can use JWT instead)
 
-## 💰 Amounts
+## Amounts
 
 All amounts in requests/responses are in **Naira (₦)**. System automatically converts to kobo for Paystack.
     """,
