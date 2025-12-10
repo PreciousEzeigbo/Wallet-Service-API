@@ -22,7 +22,6 @@ router = APIRouter(prefix="/keys", tags=["API Keys"])
         400: {"description": "Maximum of 5 active keys reached"},
         401: {"description": "Invalid or missing JWT token"}
     },
-    dependencies=[],
     tags=["API Keys"]
 )
 async def create_api_key(
@@ -93,7 +92,8 @@ async def create_api_key(
         400: {"description": "Key not expired or max keys reached"},
         401: {"description": "Invalid or missing JWT token"},
         404: {"description": "Key not found"}
-    }
+    },
+    tags=["API Keys"]
 )
 async def rollover_api_key(
     request: RolloverAPIKeyRequest,
@@ -179,7 +179,8 @@ async def rollover_api_key(
         200: {"description": "API key revoked successfully"},
         401: {"description": "Invalid or missing JWT token"},
         404: {"description": "Key not found"}
-    }
+    },
+    tags=["API Keys"]
 )
 async def revoke_api_key(
     key_id: str,
@@ -232,7 +233,8 @@ async def revoke_api_key(
     responses={
         200: {"description": "List of all API keys with metadata"},
         401: {"description": "Invalid or missing JWT token"}
-    }
+    },
+    tags=["API Keys"]
 )
 async def list_api_keys(
     user: User = Depends(get_current_user_jwt_only),

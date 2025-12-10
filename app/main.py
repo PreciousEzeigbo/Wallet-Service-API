@@ -126,6 +126,16 @@ def custom_openapi():
         }
     }
     
+    for path, path_item in openapi_schema.get("paths", {}).items():
+        if path.startswith("/keys"):
+            for operation in path_item.values():
+                if isinstance(operation, dict) and "operationId" in operation:
+                    operation["security"] = [{"bearerAuth": []}]
+        elif path.startswith("/wallet"):
+            for operation in path_item.values():
+                if isinstance(operation, dict) and "operationId" in operation:
+                    operation["security"] = [{"bearerAuth": []}, {"apiKeyAuth": []}]
+    
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
