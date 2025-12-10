@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     paystack_secret_key: str
     paystack_public_key: str
     paystack_webhook_secret: str
+    paystack_webhook_url: str
     
     # App
     app_url: str = "http://localhost:8000"
