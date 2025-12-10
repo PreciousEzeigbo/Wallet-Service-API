@@ -15,31 +15,46 @@ app = FastAPI(
 
 A production-ready wallet service with Paystack payment integration, OAuth authentication, and granular API key permissions.
 
-## Authentication
+## 🔐 Getting Started - Authentication
 
-This API supports two authentication methods:
+### Step 1: Get Your JWT Token (First Time Setup)
 
-### 1. JWT Bearer Token (Required for Key Management)
-- Obtain via Google OAuth (`/auth/google`) or test login (`/auth/test-login`)
-- Full access to all endpoints including API key creation and management
-- Use for: Creating, listing, revoking, and rolling over API keys
+**Option A: Google OAuth (Recommended)**
+1. Copy this URL: `https://pez.name.ng/auth/google`
+2. Paste it in a new browser tab (NOT in Swagger UI)
+3. Complete Google sign-in
+4. You'll receive a JSON response with your `access_token`
+5. Copy the token value
 
-### 2. API Key (For Wallet Operations Only)
-- Create via `/keys/create` endpoint using JWT auth
-- Supports granular permissions: `deposit`, `transfer`, `read`
-- Cannot be used to manage API keys (prevents privilege escalation)
-- Pass in `x-api-key` header
+**Option B: Quick Login (Testing)**
+- Use `/auth/login` endpoint with your email
+- Get instant JWT token
 
-## Paystack Integration
+### Step 2: Authorize in Swagger
+1. Click the green "Authorize" button at the top
+2. In the "bearerAuth" field, paste your JWT token (without "Bearer " prefix)
+3. Leave "apiKeyAuth" empty for now
+4. Click "Authorize" then "Close"
 
-All monetary amounts are handled in **Naira** (₦) in API requests/responses. The system automatically converts to kobo (smallest unit) for Paystack transactions.
+### Step 3: Create API Keys (Optional)
+- Now you can use `/keys/create` to generate API keys with specific permissions
+- API keys are for automated systems/services that need limited access
 
-## Workflow
+## 🔑 Authentication Methods
 
-1. Authenticate via `/auth/google` to get JWT token
-2. Create API keys with specific permissions via `/keys/create`
-3. Use API keys for wallet operations (deposits, transfers, balance checks)
-4. Paystack webhooks automatically credit wallets on successful payments
+### JWT Bearer Token (For You - The Owner)
+- Full access to everything
+- Manage API keys, perform all wallet operations
+- Required for: `/keys/*` endpoints
+
+### API Key (For Your Apps/Services)
+- Limited permissions: `deposit`, `transfer`, `read`
+- Cannot create or manage other keys (security)
+- Optional for: `/wallet/*` endpoints (you can use JWT instead)
+
+## 💰 Amounts
+
+All amounts in requests/responses are in **Naira (₦)**. System automatically converts to kobo for Paystack.
     """,
     version="1.0.0",
     openapi_tags=[
@@ -105,13 +120,13 @@ def custom_openapi():
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "JWT token obtained from Google OAuth login. Use for all operations including API key management."
+            "description": "**JWT Token (Required for /keys/* endpoints)**\n\nGet your token from `/auth/google` or `/auth/login`, then paste it here (without 'Bearer ' prefix)."
         },
         "apiKeyAuth": {
             "type": "apiKey",
             "in": "header",
             "name": "x-api-key",
-            "description": "API key for wallet operations with granular permissions (deposit, transfer, read). Cannot be used for key management endpoints."
+            "description": "**Optional for /wallet/* endpoints** (you can use JWT instead)\n\nCreate API keys via `/keys/create` after authenticating with JWT. Leave empty unless you created an API key."
         }
     }
     

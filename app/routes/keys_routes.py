@@ -21,7 +21,9 @@ router = APIRouter(prefix="/keys", tags=["API Keys"])
         200: {"description": "API key created successfully"},
         400: {"description": "Maximum of 5 active keys reached"},
         401: {"description": "Invalid or missing JWT token"}
-    }
+    },
+    dependencies=[],
+    tags=["API Keys"]
 )
 async def create_api_key(
     request: CreateAPIKeyRequest,
