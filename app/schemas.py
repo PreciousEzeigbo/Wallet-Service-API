@@ -1,5 +1,5 @@
- nfrom pydantic import BaseModel, Field, validator
-from typing import List, Optional
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional, Any
 from datetime import datetime
 from enum import Enum
 
@@ -25,7 +25,7 @@ class ExpiryOption(str, Enum):
 class GoogleAuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: dict
+    user: dict[str, Any]
 
 
 class CreateAPIKeyRequest(BaseModel):
@@ -34,7 +34,7 @@ class CreateAPIKeyRequest(BaseModel):
     expiry: ExpiryOption = Field(..., description="Expiry duration: one of '1H', '1D', '1M', '1Y'")
 
     @validator('permissions')
-    def validate_permissions(cls, v):
+    def validate_permissions(cls, v: List[str]) -> List[str]:
         valid_permissions = ["deposit", "transfer", "read"]
         for perm in v:
             if perm not in valid_permissions:
