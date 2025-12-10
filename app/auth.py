@@ -143,6 +143,13 @@ async def get_current_user(
         
         return user, None
     
+    if x_api_key is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Provide either Bearer token or x-api-key header."
+        )
+    # This part should ideally not be reached if x_api_key is None and credentials is None
+    # but as a fallback, raise it explicitly.
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Authentication required. Provide either Bearer token or x-api-key header."
