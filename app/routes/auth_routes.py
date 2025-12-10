@@ -76,21 +76,17 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
             data={"sub": user.id, "email": user.email}
         )
         
-        # Check if request wants JSON response (for testing)
-        if request.query_params.get('format') == 'json':
-            return {
-                "access_token": access_token,
-                "token_type": "bearer",
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "name": user.name
-                }
+        # Return token as JSON (backend API response)
+        # Removed redirect to frontend since this is a backend-only service
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "name": user.name
             }
-        
-        # Redirect to frontend with token
-        frontend_url = f"{settings.frontend_url}?token={access_token}"
-        return RedirectResponse(url=frontend_url)
+        }
         
     except Exception as e:
         # More detailed error handling
