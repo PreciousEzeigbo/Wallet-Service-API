@@ -31,16 +31,71 @@ oauth.register(
 )
 
 
-@router.get("/google")
+@router.get(
+    "/google",
+    summary="Initiate Google OAuth login",
+    description="""Start Google OAuth authentication flow to obtain JWT token. 
+    
+    **IMPORTANT - How to use:**
+    1. Copy this endpoint URL: `https://pez.name.ng/auth/google`
+    2. Paste it in a NEW browser tab (NOT in Swagger/Postman)
+    3. Complete Google sign-in
+    4. You'll receive JWT token as JSON response
+    5. Use the `access_token` in Authorization header: `Bearer <token>`
+    
+    **Why not use Swagger UI?**
+    OAuth requires browser redirects and cookies which Swagger cannot handle properly.
+    
+    **First-time users:**
+    Automatically creates wallet with unique 10-digit wallet number.
+    """,
+    responses={
+        302: {"description": "Redirect to Google OAuth consent screen"}
+    }
+)
 async def google_login(request: Request):
-    """Initiate Google OAuth flow"""
+    """
+    Initiate Google OAuth flow to obtain JWT access token.
+    
+    Args:
+        request: HTTP request object
+    
+    Returns:
+        RedirectResponse: Redirects to Google OAuth consent screen
+    
+    Note:
+        Must be accessed via browser, not API testing tools.
+    """
     redirect_uri = settings.google_redirect_uri
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-@router.get("/google/callback")
+@router.get(
+    "/google/callback",
+    summary="Google OAuth callback",
+    description="""Handle Google OAuth callback and return JWT token. This endpoint is automatically called by Google after successful authentication. Returns JWT token as JSON (no frontend redirect).""",
+    responses={
+        200: {"description": "JWT token and user information"},
+        400: {"description": "OAuth failed or state mismatch"}
+    }
+)
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    """Handle Google OAuth callback"""
+    """
+    Process Google OAuth callback and return JWT token with user details.
+    
+    Args:
+        request: HTTP request with OAuth authorization code
+        db: Database session
+    
+    Returns:
+        dict: JWT access token, token type, and user information
+    
+    Raises:
+        HTTPException 400: OAuth validation failed or missing user info
+    
+    Note:
+        Creates new user and wallet if first-time login.
+    """
     try:
         token = await oauth.google.authorize_access_token(request)
         user_info = token.get('userinfo')
@@ -48,11 +103,9 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         if not user_info:
             raise HTTPException(status_code=400, detail="Failed to get user info from Google")
         
-        # Check if user exists
         user = db.query(User).filter(User.email == user_info['email']).first()
         
         if not user:
-            # Create new user
             user = User(
                 email=user_info['email'],
                 google_id=user_info['sub'],
@@ -61,7 +114,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
             db.add(user)
             db.flush()
             
-            # Create wallet for new user
             wallet_number = generate_wallet_number()
             wallet = Wallet(
                 user_id=user.id,
@@ -71,13 +123,10 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(user)
         
-        # Create JWT token
         access_token = create_access_token(
             data={"sub": user.id, "email": user.email}
         )
         
-        # Return token as JSON (backend API response)
-        # Removed redirect to frontend since this is a backend-only service
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -89,7 +138,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         }
         
     except Exception as e:
-        # More detailed error handling
         error_detail = str(e)
         if "mismatching_state" in error_detail:
             raise HTTPException(
@@ -104,17 +152,41 @@ def generate_wallet_number() -> str:
     return ''.join([str(secrets.randbelow(10)) for _ in range(10)])
 
 
-@router.post("/test-login")
-async def test_login(email: str, db: Session = Depends(get_db)):
+@router.post(
+    "/login",
+    summary="Email-based login (development/testing)",
+    description="""Quick authentication endpoint for development and testing without Google OAuth. Provide any email address to instantly receive a JWT token. Creates new user and wallet if email doesn't exist, or logs in existing user.
+    
+    **Use cases:**
+    - Local development and testing
+    - Automated testing and CI/CD pipelines
+    - Quick API exploration without OAuth setup
+    
+    **Production note:**
+    Disable this endpoint in production environments. Use Google OAuth (`/auth/google`) for production authentication.
+    """,
+    responses={
+        200: {"description": "JWT token, user details, and wallet number"}
+    }
+)
+async def login(email: str, db: Session = Depends(get_db)):
     """
-    Test endpoint to create/login a user without Google OAuth.
-    Only for development/testing purposes.
+    Authenticate or create user with email, returning JWT token immediately.
+    
+    Args:
+        email: User email address (any valid email format)
+        db: Database session
+    
+    Returns:
+        dict: JWT access token, user information, and wallet number
+    
+    Note:
+        Automatically creates user and wallet for new email addresses.
+        For testing/development only - not recommended for production.
     """
-    # Check if user exists
     user = db.query(User).filter(User.email == email).first()
     
     if not user:
-        # Create new user
         user = User(
             email=email,
             google_id=f"test_{secrets.token_hex(8)}",
@@ -123,7 +195,6 @@ async def test_login(email: str, db: Session = Depends(get_db)):
         db.add(user)
         db.flush()
         
-        # Create wallet for new user
         wallet_number = generate_wallet_number()
         wallet = Wallet(
             user_id=user.id,
@@ -134,10 +205,8 @@ async def test_login(email: str, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
     
-    # Get wallet info
     wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
     
-    # Create JWT token
     access_token = create_access_token(
         data={"sub": user.id, "email": user.email}
     )
