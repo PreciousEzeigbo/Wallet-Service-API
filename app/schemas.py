@@ -48,6 +48,16 @@ class CreateAPIKeyRequest(BaseModel):
             raise ValueError(f"Invalid expiry: {v}. Valid options are: {valid_expiry}")
         return v
     
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "wallet-service",
+                "permissions": ["deposit", "transfer", "read"],
+                "expiry": "1D"
+            }
+        }
+    }
+    
     class Config:
         json_schema_extra = {
             "example": {
