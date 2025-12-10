@@ -188,7 +188,7 @@ async def list_api_keys(
             permissions=[str(p) for p in key.permissions],
             expires_at=key.expires_at.replace(tzinfo=timezone.utc),
             is_active=bool(key.is_active),
-            is_expired=bool(key.expires_at < datetime.now(timezone.utc)),
+            is_expired=bool(key.expires_at < datetime.utcnow()),
             created_at=key.created_at.replace(tzinfo=timezone.utc),
             key_preview=f"{key.key_prefix}..."  # Only show prefix, never full key
         )
